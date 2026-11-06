@@ -1,0 +1,128 @@
+# Aplora — local infrastructure and an optional full-stack deployment.
+#
+#   docker compose up -d postgres minio mailpit      # infrastructure only
+#   docker compose --profile full up -d --build      # everything
+#
+# The default profile intentionally starts only the services you cannot
+# reasonably run without Docker, so `pnpm dev` can run the Node processes on the
+# host with fast reloads.
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: aplora
+      POSTGRES_PASSWORD: aplora
+      POSTGRES_DB: aplora
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U aplora -d aplora"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  minio:
+    image: minio/minio:latest
+    restart: unless-stopped
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: aplora
+      MINIO_ROOT_PASSWORD: aplora-secret
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    volumes:
+      - minio-data:/data
+    healthcheck:
+      test: ["CMD", "mc", "ready", "local"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  mailpit:
+    image: axllent/mailpit:latest
+    restart: unless-stopped
+    ports:
+      - "1025:1025"
+      - "8025:8025"
+
+  api:
+    profiles: ["full"]
+    build:
+      context: .
+      dockerfile: infrastructure/docker/Dockerfile
+    command: ["node", "services/api/dist/server.js"]
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      NODE_ENV: production
+      API_PORT: "4000"
+      DATABASE_URL: postgresql://aplora:aplora@postgres:5432/aplora
+      SESSION_SECRET: ${SESSION_SECRET:?set SESSION_SECRET in .env}
+      COOKIE_SECURE: ${COOKIE_SECURE:-false}
+      STORAGE_DRIVER: ${STORAGE_DRIVER:-local}
+      STORAGE_LOCAL_ROOT: /data/storage
+      STORAGE_ENDPOINT: http://minio:9000
+      STORAGE_BUCKET: aplora-storage
+      STORAGE_ACCESS_KEY: aplora
+      STORAGE_SECRET_KEY: aplora-secret
+      PUBLIC_MARKETPLACE_URL: ${PUBLIC_MARKETPLACE_URL:-http://localhost:4321}
+      PUBLIC_DEVELOPER_URL: ${PUBLIC_DEVELOPER_URL:-http://localhost:4322}
+      PUBLIC_ADMIN_URL: ${PUBLIC_ADMIN_URL:-http://localhost:4323}
+      MAIL_TRANSPORT: ${MAIL_TRANSPORT:-smtp}
+      SMTP_HOST: mailpit
+      SMTP_PORT: "1025"
+    ports:
+      - "4000:4000"
+    volumes:
+      - storage-data:/data/storage
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:4000/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+
+  worker:
+    profiles: ["full"]
+    build:
+      context: .
+      dockerfile: infrastructure/docker/Dockerfile
+    command: ["node", "services/worker/dist/index.js"]
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      NODE_ENV: production
+      DATABASE_URL: postgresql://aplora:aplora@postgres:5432/aplora
+      STORAGE_DRIVER: ${STORAGE_DRIVER:-local}
+      STORAGE_LOCAL_ROOT: /data/storage
+      STORAGE_ENDPOINT: http://minio:9000
+      STORAGE_ACCESS_KEY: aplora
+      STORAGE_SECRET_KEY: aplora-secret
+      MALWARE_SCANNER: ${MALWARE_SCANNER:-local}
+    volumes:
+      - storage-data:/data/storage
+
+  pages:
+    profiles: ["full"]
+    image: nginx:alpine
+    restart: unless-stopped
+    depends_on:
+      - api
+    volumes:
+      - ./dist:/usr/share/nginx/html/aplora:ro
+      - ./infrastructure/nginx/pages.conf:/etc/nginx/conf.d/default.conf:ro
+    ports:
+      - "8080:80"
+
+volumes:
+  postgres-data:
+  minio-data:
+  storage-data:

@@ -1,0 +1,71 @@
+name: Deploy Aplora to GitHub Pages
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+# Only one deployment at a time; a queued run supersedes the previous one.
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+jobs:
+  build:
+    name: Build and verify
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out the repository
+        uses: actions/checkout@v4
+
+      - name: Install Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Generate the Prisma client
+        run: npx prisma generate --schema packages/database/prisma/schema.prisma
+
+      - name: TypeScript checks
+        run: npm run typecheck
+
+      - name: Build the API and worker
+        run: |
+          npm run build --workspace @aplora/api
+          npm run build --workspace @aplora/worker
+
+      - name: Build the portals and assemble the Pages artifact
+        env:
+          # Public, non-secret configuration. Set it in
+          # Settings → Secrets and variables → Actions → Variables.
+          PUBLIC_API_BASE_URL: ${{ vars.PUBLIC_API_BASE_URL }}
+        run: npm run build:pages
+
+      - name: Verify the Pages artifact
+        run: node infrastructure/scripts/verify-pages.mjs
+
+      - name: Upload the Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: dist
+
+  deploy:
+    name: Deploy
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

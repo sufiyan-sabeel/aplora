@@ -1,0 +1,50 @@
+{
+  "name": "aplora",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Aplora \u2014 an independent Android application marketplace (marketplace, developer portal, admin portal, API).",
+  "author": "Umaiz Sufiyan",
+  "license": "UNLICENSED",
+  "packageManager": "pnpm@9.12.3",
+  "engines": {
+    "node": ">=20.11.0"
+  },
+  "scripts": {
+    "dev": "node infrastructure/scripts/dev.mjs",
+    "dev:api": "npm run dev --workspace @aplora/api",
+    "dev:worker": "npm run dev --workspace @aplora/worker",
+    "dev:marketplace": "npm run dev --workspace @aplora/marketplace",
+    "dev:developer": "npm run dev --workspace @aplora/developer",
+    "dev:admin": "npm run dev --workspace @aplora/admin",
+    "build": "npm run build --workspaces --if-present",
+    "typecheck": "npm run typecheck --workspaces --if-present",
+    "test": "npm run test --workspace @aplora/api",
+    "test:security": "npm run test:security --workspace @aplora/api",
+    "db:generate": "npm run generate --workspace @aplora/database",
+    "db:migrate": "npm run migrate:dev --workspace @aplora/database",
+    "db:deploy": "npm run migrate:deploy --workspace @aplora/database",
+    "db:seed": "npm run seed --workspace @aplora/database",
+    "db:reset": "npm run reset --workspace @aplora/database",
+    "infra:up": "docker compose up -d postgres minio mailpit",
+    "infra:down": "docker compose down",
+    "setup": "node infrastructure/scripts/setup.mjs",
+    "smoke": "tsx infrastructure/scripts/smoke.ts",
+    "demo:apk": "tsx infrastructure/scripts/make-demo-apk.ts",
+    "verify": "npm run typecheck && npm run build && npm test",
+    "backup": "bash infrastructure/scripts/backup.sh",
+    "restore": "bash infrastructure/scripts/restore.sh",
+    "build:pages": "node infrastructure/scripts/build-pages.mjs",
+    "serve:pages": "node infrastructure/scripts/serve-pages.mjs"
+  },
+  "devDependencies": {
+    "concurrently": "^9.1.0",
+    "typescript": "^5.6.3",
+    "tsx": "^4.19.2",
+    "dotenv": "^16.4.5"
+  },
+  "workspaces": [
+    "apps/*",
+    "services/*",
+    "packages/*"
+  ]
+}
