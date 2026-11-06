@@ -1,0 +1,26 @@
+---
+import SiteShell from "@aplora/ui/components/SiteShell.astro";
+
+const nav = [
+  { label: "Dashboard", href: "" },
+  { label: "Submissions", href: "submissions/" },
+  { label: "Applications", href: "apps/" },
+  { label: "Users", href: "users/" },
+  { label: "Developers", href: "developers/" },
+  { label: "Reports", href: "reports/" },
+  { label: "Reviews", href: "reviews/" },
+  { label: "Taxonomy", href: "categories/" },
+  { label: "Audit log", href: "audit-logs/" },
+  { label: "Settings", href: "settings/" },
+];
+---
+
+<SiteShell title="Admin sign in" portal="Admin" nav={nav} activePath="/login/">
+  <div id="view"></div>
+
+  <script>
+    import { bootstrap } from "../views/boot";
+    import { renderLogin } from "../views/auth";
+    bootstrap(renderLogin, "Preparing sign-in…");
+  </script>
+</SiteShell>

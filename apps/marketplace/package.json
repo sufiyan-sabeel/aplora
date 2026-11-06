@@ -1,0 +1,24 @@
+{
+  "name": "@aplora/marketplace",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "astro dev --port 4321",
+    "build": "astro build",
+    "preview": "astro preview --port 4321",
+    "typecheck": "astro check"
+  },
+  "dependencies": {
+    "@aplora/shared-types": "*",
+    "@aplora/ui": "*",
+    "@aplora/validation": "*",
+    "@lucide/astro": "^1.70.0",
+    "astro": "5.18.2",
+    "@aplora/client": "*"
+  },
+  "devDependencies": {
+    "@astrojs/check": "^0.9.4",
+    "typescript": "^5.6.3"
+  }
+}

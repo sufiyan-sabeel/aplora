@@ -1,0 +1,41 @@
+---
+import SiteShell from "@aplora/ui/components/SiteShell.astro";
+
+const nav = [
+  { label: "Apps", href: "apps/" },
+  { label: "Categories", href: "categories/" },
+  { label: "Search", href: "search/" },
+];
+---
+
+<SiteShell title="Content guidelines" portal="Marketplace" nav={nav} activePath="/guidelines/">
+  <h1>Content guidelines</h1>
+  <p class="muted">What is accepted, and what is removed.</p>
+
+  <div class="stack">
+    <section class="card">
+      <h2>Accepted</h2>
+      <ul class="stack-sm" style="padding-left:18px;">
+        <li>Applications you own or are authorised to distribute.</li>
+        <li>Honest descriptions, screenshots of the real interface and accurate permissions.</li>
+        <li>A signing certificate that stays the same across releases.</li>
+      </ul>
+    </section>
+    <section class="card">
+      <h2>Removed</h2>
+      <ul class="stack-sm" style="padding-left:18px;">
+        <li>Malware, spyware, stalkerware or anything that hides its behaviour.</li>
+        <li>Applications that impersonate another product or developer.</li>
+        <li>Listings that promise functionality the application does not provide.</li>
+        <li>Content that infringes copyright or trademarks.</li>
+      </ul>
+    </section>
+    <section class="card">
+      <h2>Reporting</h2>
+      <p>
+        Use the report action on any application page. Reports go to the review queue with your account attached, so
+        we can follow up. Applications can be suspended immediately while a report is investigated.
+      </p>
+    </section>
+  </div>
+</SiteShell>

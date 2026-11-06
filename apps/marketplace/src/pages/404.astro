@@ -1,0 +1,18 @@
+---
+import SiteShell from "@aplora/ui/components/SiteShell.astro";
+import { url } from "@aplora/client/config";
+
+const nav = [
+  { label: "Apps", href: "apps/" },
+  { label: "Categories", href: "categories/" },
+  { label: "Search", href: "search/" },
+];
+---
+
+<SiteShell title="Page not found" portal="Marketplace" nav={nav} activePath="">
+  <div class="empty">
+    <h3>We could not find that page</h3>
+    <p>The link may be old, or the page may have moved.</p>
+    <a class="btn btn--primary" href={url("")}>Back to the marketplace</a>
+  </div>
+</SiteShell>

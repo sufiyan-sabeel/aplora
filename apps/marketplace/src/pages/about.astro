@@ -1,0 +1,39 @@
+---
+import SiteShell from "@aplora/ui/components/SiteShell.astro";
+import { url } from "@aplora/client/config";
+
+const nav = [
+  { label: "Apps", href: "apps/" },
+  { label: "Categories", href: "categories/" },
+  { label: "Search", href: "search/" },
+];
+---
+
+<SiteShell title="About Aplora" portal="Marketplace" nav={nav} activePath="/about/">
+  <h1>About Aplora</h1>
+  <p class="muted">Discover. Explore. Install.</p>
+
+  <div class="grid grid-2">
+    <section class="card">
+      <h2>An independent marketplace</h2>
+      <p>
+        Aplora is an independent Android application marketplace. It is not affiliated with, endorsed by or connected
+        to any other store, and it does not use another company's private interfaces or data.
+      </p>
+      <p>Every listing is created by its developer, scanned automatically and reviewed by a person before publication.</p>
+    </section>
+    <section class="card">
+      <h2>How publishing works</h2>
+      <ol class="stack-sm" style="padding-left:18px;">
+        <li>A developer uploads an APK and submits it for review.</li>
+        <li>The file is validated: archive integrity, manifest identity, package name, version and signing certificate.</li>
+        <li>It is scanned, and only a clean result moves it into the review queue.</li>
+        <li>An administrator approves or rejects it with a reason.</li>
+        <li>Approved versions become downloadable, with their checksum published.</li>
+      </ol>
+    </section>
+  </div>
+
+  <p class="small faint" style="margin-top:var(--space-6);">Created by Umaiz Sufiyan.</p>
+  <p class="small faint"><a href={url("")}>Back to the marketplace</a></p>
+</SiteShell>

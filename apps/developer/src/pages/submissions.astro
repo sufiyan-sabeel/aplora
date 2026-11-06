@@ -1,0 +1,21 @@
+---
+import SiteShell from "@aplora/ui/components/SiteShell.astro";
+
+const nav = [
+  { label: "Dashboard", href: "" },
+  { label: "Applications", href: "apps/" },
+  { label: "Submissions", href: "submissions/" },
+  { label: "Analytics", href: "analytics/" },
+  { label: "Profile", href: "profile/" },
+];
+---
+
+<SiteShell title="Submissions" portal="Developer" nav={nav} activePath="/submissions/">
+  <div id="view"></div>
+
+  <script>
+    import { bootstrap } from "../views/boot";
+    import { renderSubmissions } from "../views/submissions";
+    bootstrap(renderSubmissions, "Loading submissions…");
+  </script>
+</SiteShell>

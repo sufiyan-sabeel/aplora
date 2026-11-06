@@ -1,0 +1,19 @@
+---
+import SiteShell from "@aplora/ui/components/SiteShell.astro";
+
+const nav = [
+  { label: "Apps", href: "apps/" },
+  { label: "Categories", href: "categories/" },
+  { label: "Search", href: "search/" },
+];
+---
+
+<SiteShell title="Search" portal="Marketplace" nav={nav} activePath="/search/">
+  <div id="view"></div>
+
+  <script>
+    import { bootstrap } from "../views/boot";
+    import { renderSearch } from "../views/search";
+    bootstrap(renderSearch, "Searching…");
+  </script>
+</SiteShell>

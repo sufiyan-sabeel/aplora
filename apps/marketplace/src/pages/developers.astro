@@ -1,0 +1,36 @@
+---
+import SiteShell from "@aplora/ui/components/SiteShell.astro";
+import { url } from "@aplora/client/config";
+
+const nav = [
+  { label: "Apps", href: "apps/" },
+  { label: "Categories", href: "categories/" },
+  { label: "Search", href: "search/" },
+];
+---
+
+<SiteShell title="For developers" portal="Marketplace" nav={nav} activePath="/developers/">
+  <h1>Publish on Aplora</h1>
+  <p class="muted">A straightforward pipeline: upload, review, publish.</p>
+
+  <div class="grid grid-2">
+    <section class="card">
+      <h2>What you get</h2>
+      <ul class="stack-sm" style="padding-left:18px;">
+        <li>A listing page with your screenshots, description and release history.</li>
+        <li>Download statistics built from real recorded download events.</li>
+        <li>Clear rejection reasons, and the ability to correct and resubmit.</li>
+      </ul>
+      <a class="btn btn--primary" href={url("developer/register/")} style="margin-top:var(--space-4);">Create a developer account</a>
+    </section>
+    <section class="card">
+      <h2>Before you upload</h2>
+      <ul class="stack-sm" style="padding-left:18px;">
+        <li>The APK must be signed, and later releases must use the same certificate.</li>
+        <li>The package name in the manifest must match the listing.</li>
+        <li>Version name and version code must match what you submit.</li>
+        <li>Uploads are limited in size and scanned before review.</li>
+      </ul>
+    </section>
+  </div>
+</SiteShell>
