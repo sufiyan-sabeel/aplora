@@ -1,0 +1,12 @@
+process.env.NODE_ENV = "test";
+process.env.DATABASE_URL = process.env.TEST_DATABASE_URL ?? "postgresql://aplora@127.0.0.1:5432/aplora_test";
+process.env.SESSION_SECRET = "test-session-secret-0123456789abcdef0123456789abcdef";
+process.env.STORAGE_DRIVER = "local";
+process.env.STORAGE_LOCAL_ROOT = "/scratch/work/aplora/.storage-test";
+process.env.API_PUBLIC_URL = "http://localhost:4000";
+process.env.PUBLIC_MARKETPLACE_URL = "http://localhost:4321";
+process.env.PUBLIC_DEVELOPER_URL = "http://localhost:4322";
+process.env.PUBLIC_ADMIN_URL = "http://localhost:4323";
+process.env.MAIL_TRANSPORT = "console";
+process.env.MALWARE_SCANNER = "local";
+process.env.MAX_APK_SIZE_MB = "200";
