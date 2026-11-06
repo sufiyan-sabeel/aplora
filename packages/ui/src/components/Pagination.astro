@@ -1,0 +1,29 @@
+---
+interface Props {
+  page: number;
+  totalPages: number;
+  buildHref: (page: number) => string;
+}
+const { page, totalPages, buildHref } = Astro.props;
+const windowSize = 2;
+const pages: number[] = [];
+for (let index = Math.max(1, page - windowSize); index <= Math.min(totalPages, page + windowSize); index += 1) {
+  pages.push(index);
+}
+---
+
+{pages.length > 1 ? (
+  <nav class="pagination" aria-label="Pagination">
+    {page > 1 ? <a href={buildHref(page - 1)} rel="prev">Previous</a> : <span class="is-disabled">Previous</span>}
+    {pages[0] > 1 ? <a href={buildHref(1)}>1</a> : null}
+    {pages[0] > 2 ? <span class="is-disabled">…</span> : null}
+    {pages.map((number) => (
+      number === page
+        ? <span aria-current="page">{number}</span>
+        : <a href={buildHref(number)}>{number}</a>
+    ))}
+    {pages[pages.length - 1] < totalPages - 1 ? <span class="is-disabled">…</span> : null}
+    {pages[pages.length - 1] < totalPages ? <a href={buildHref(totalPages)}>{totalPages}</a> : null}
+    {page < totalPages ? <a href={buildHref(page + 1)} rel="next">Next</a> : <span class="is-disabled">Next</span>}
+  </nav>
+) : null}

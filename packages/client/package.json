@@ -1,0 +1,24 @@
+{
+  "name": "@aplora/client",
+  "version": "1.0.0",
+  "private": true,
+  "main": "src/index.ts",
+  "types": "src/index.ts",
+  "exports": {
+    ".": "./src/index.ts",
+    "./config": "./src/config.ts",
+    "./api": "./src/api.ts",
+    "./ui": "./src/ui.ts",
+    "./session": "./src/session.ts",
+    "./shell": "./src/shell.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@aplora/shared-types": "*"
+  },
+  "devDependencies": {
+    "typescript": "^5.6.3"
+  }
+}

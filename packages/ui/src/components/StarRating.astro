@@ -1,0 +1,22 @@
+---
+import { formatRating } from "../index";
+
+interface Props {
+  rating: number;
+  reviewCount?: number;
+  showCount?: boolean;
+}
+const { rating, reviewCount = 0, showCount = true } = Astro.props;
+const rounded = Math.round(rating);
+---
+
+<span class="rating" aria-label={`Rated ${formatRating(rating)} out of 5 from ${reviewCount} reviews`}>
+  <span class="rating__stars" aria-hidden="true">
+    {[1, 2, 3, 4, 5].map((star) => (
+      <svg viewBox="0 0 24 24" fill={star <= rounded ? "currentColor" : "none"} stroke="currentColor" stroke-width="1.6">
+        <path d="M12 3.5l2.6 5.3 5.9.9-4.3 4.1 1 5.8-5.2-2.7-5.2 2.7 1-5.8L3.5 9.7l5.9-.9z" />
+      </svg>
+    ))}
+  </span>
+  <span>{rating > 0 ? formatRating(rating) : "No ratings"}{showCount && reviewCount > 0 ? ` (${reviewCount})` : ""}</span>
+</span>

@@ -1,0 +1,32 @@
+{
+  "name": "@aplora/apk",
+  "version": "1.0.0",
+  "private": true,
+  "main": "src/index.ts",
+  "types": "src/index.ts",
+  "scripts": {
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "fflate": "^0.8.3",
+    "node-forge": "^1.3.1"
+  },
+  "devDependencies": {
+    "@types/node-forge": "^1.3.11",
+    "typescript": "^5.6.3"
+  },
+  "exports": {
+    ".": "./src/index.ts",
+    "./testing": "./src/testing/fixture.ts"
+  },
+  "typesVersions": {
+    "*": {
+      "testing": [
+        "src/testing/fixture.ts"
+      ],
+      "*": [
+        "src/index.ts"
+      ]
+    }
+  }
+}

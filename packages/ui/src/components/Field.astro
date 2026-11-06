@@ -1,0 +1,64 @@
+---
+interface Props {
+  label: string;
+  name: string;
+  type?: string;
+  value?: string | number | null;
+  required?: boolean;
+  hint?: string;
+  error?: string;
+  placeholder?: string;
+  autocomplete?: string;
+  min?: number;
+  max?: number;
+  rows?: number;
+  id?: string;
+}
+const {
+  label,
+  name,
+  type = "text",
+  value = "",
+  required = false,
+  hint,
+  error,
+  placeholder,
+  autocomplete,
+  min,
+  max,
+  rows = 5,
+  id = `field-${name}`,
+} = Astro.props;
+const describedBy = [hint ? `${id}-hint` : null, error ? `${id}-error` : null].filter(Boolean).join(" ");
+---
+
+<div class="field">
+  <label for={id}>{label}{required ? <span aria-hidden="true"> *</span> : null}</label>
+  {type === "textarea" ? (
+    <textarea
+      id={id}
+      name={name}
+      required={required}
+      placeholder={placeholder}
+      rows={rows}
+      aria-invalid={error ? "true" : undefined}
+      aria-describedby={describedBy || undefined}
+    >{value}</textarea>
+  ) : (
+    <input
+      id={id}
+      name={name}
+      type={type}
+      value={value ?? ""}
+      required={required}
+      placeholder={placeholder}
+      autocomplete={autocomplete}
+      min={min}
+      max={max}
+      aria-invalid={error ? "true" : undefined}
+      aria-describedby={describedBy || undefined}
+    />
+  )}
+  {hint ? <span class="hint" id={`${id}-hint`}>{hint}</span> : null}
+  {error ? <span class="error" id={`${id}-error`}>{error}</span> : null}
+</div>

@@ -1,0 +1,30 @@
+---
+import type { AppSummary } from "@aplora/shared-types";
+import { formatNumber, initials } from "../index";
+import StarRating from "./StarRating.astro";
+
+interface Props {
+  app: AppSummary;
+}
+const { app } = Astro.props;
+---
+
+<a class="card card--link app-card" href={`/apps/${app.slug}`}>
+  <div class="app-card__head">
+    {app.iconUrl ? (
+      <img class="app-card__icon" src={app.iconUrl} alt="" width="56" height="56" loading="lazy" />
+    ) : (
+      <span class="app-card__icon app-card__icon--placeholder" aria-hidden="true">{initials(app.name)}</span>
+    )}
+    <div style="min-width:0;">
+      <h3 class="app-card__title">{app.name}</h3>
+      <p class="app-card__dev">{app.developer.displayName}</p>
+      <p class="app-card__dev" style="color:var(--text-faint);">{app.category.name}</p>
+    </div>
+  </div>
+  <p class="app-card__desc">{app.shortDescription}</p>
+  <div class="app-card__meta">
+    <StarRating rating={app.rating} reviewCount={app.reviewCount} />
+    <span>{formatNumber(app.downloadCount)} downloads</span>
+  </div>
+</a>

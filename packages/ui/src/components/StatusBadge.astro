@@ -1,0 +1,13 @@
+---
+import { statusTone } from "../index";
+import Badge from "./Badge.astro";
+
+interface Props {
+  status: string;
+  label?: string;
+}
+const { status, label } = Astro.props;
+const readable = (label ?? status).replaceAll("_", " ").toLowerCase();
+---
+
+<Badge tone={statusTone(status)} label={readable.charAt(0).toUpperCase() + readable.slice(1)} />

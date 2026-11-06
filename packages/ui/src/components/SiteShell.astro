@@ -1,0 +1,126 @@
+---
+import "../styles/global.css";
+import { marketplaceUrl, url } from "@aplora/client/config";
+
+interface NavItem {
+  label: string;
+  href: string;
+}
+
+interface Props {
+  title: string;
+  description?: string;
+  portal: "Marketplace" | "Developer" | "Admin";
+  nav?: NavItem[];
+  activePath?: string;
+  footerNote?: string;
+}
+
+const {
+  title,
+  description = "Aplora — discover, explore and install Android applications.",
+  portal,
+  nav = [],
+  activePath = "",
+  footerNote,
+} = Astro.props;
+
+const fullTitle = title === "Aplora" ? "Aplora" : `${title} · Aplora`;
+const home = url("");
+const isActive = (href: string) => (href === "/" ? activePath === "/" : activePath.startsWith(href));
+---
+
+<!doctype html>
+<html lang="en" data-theme="dark">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="description" content={description} />
+    <meta name="color-scheme" content="dark light" />
+    <link rel="icon" href={url("favicon.svg")} type="image/svg+xml" />
+    <title>{fullTitle}</title>
+    <script is:inline>
+      try {
+        const stored = localStorage.getItem("aplora-theme");
+        if (stored === "light" || stored === "dark") {
+          document.documentElement.dataset.theme = stored;
+        }
+      } catch {}
+    </script>
+  </head>
+  <body>
+    <div class="page">
+      <a class="skip-link" href="#main">Skip to content</a>
+      <header class="site-header">
+        <div class="container site-header__inner">
+          <a class="brand" href={home}>
+            <span class="brand__mark" aria-hidden="true">A</span>
+            <span>Aplora</span>
+            <span class="brand__portal">{portal}</span>
+          </a>
+
+          <button class="nav-toggle" type="button" data-nav-toggle aria-expanded="false" aria-controls="primary-nav">
+            Menu
+          </button>
+
+          <nav class="site-nav" id="primary-nav" aria-label="Primary">
+            {nav.map((item) => (
+              <a href={url(item.href)} aria-current={isActive(item.href) ? "page" : undefined}>{item.label}</a>
+            ))}
+          </nav>
+
+          <div class="header-actions" data-header-actions>
+            <div class="row" data-auth-area aria-live="polite">
+              <noscript><a class="btn btn--ghost btn--sm" href={url("login/")}>Sign in</a></noscript>
+            </div>
+            <button class="btn btn--ghost btn--sm" type="button" data-theme-toggle aria-label="Toggle colour theme">Theme</button>
+          </div>
+        </div>
+      </header>
+
+      <main id="main" class="page-main">
+        <div class="container">
+          <slot />
+        </div>
+      </main>
+
+      <footer class="site-footer">
+        <div class="container site-footer__grid">
+          <div>
+            <p style="margin:0 0 6px;color:var(--text);font-weight:600;">Aplora — Discover. Explore. Install.</p>
+            <p class="small" style="margin:0;">Created by Umaiz Sufiyan</p>
+            {footerNote ? <p class="small faint" style="margin:8px 0 0;">{footerNote}</p> : null}
+          </div>
+          <ul>
+            <li><a href={marketplaceUrl("about/")}>About</a></li>
+            <li><a href={marketplaceUrl("guidelines/")}>Content guidelines</a></li>
+            <li><a href={marketplaceUrl("developers/")}>For developers</a></li>
+          </ul>
+        </div>
+      </footer>
+    </div>
+
+    <script is:inline>
+      const toggle = document.querySelector("[data-nav-toggle]");
+      const nav = document.querySelector("#primary-nav");
+      const actions = document.querySelector("[data-header-actions]");
+      if (toggle && nav) {
+        toggle.addEventListener("click", () => {
+          const open = nav.classList.toggle("is-open");
+          if (actions) actions.classList.toggle("is-open", open);
+          toggle.setAttribute("aria-expanded", String(open));
+        });
+      }
+      const themeButton = document.querySelector("[data-theme-toggle]");
+      if (themeButton) {
+        themeButton.addEventListener("click", () => {
+          const current = document.documentElement.dataset.theme === "light" ? "dark" : "light";
+          document.documentElement.dataset.theme = current;
+          try {
+            localStorage.setItem("aplora-theme", current);
+          } catch {}
+        });
+      }
+    </script>
+  </body>
+</html>

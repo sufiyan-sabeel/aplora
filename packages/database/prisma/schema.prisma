@@ -1,0 +1,424 @@
+// Aplora database schema
+// PostgreSQL + Prisma. All timestamps are stored in UTC.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  USER
+  DEVELOPER
+  ADMIN
+  SUPER_ADMIN
+}
+
+enum UserStatus {
+  ACTIVE
+  SUSPENDED
+  DELETED
+}
+
+enum AppStatus {
+  DRAFT
+  PENDING_REVIEW
+  APPROVED
+  PUBLISHED
+  REJECTED
+  SUSPENDED
+}
+
+enum VersionStatus {
+  DRAFT
+  UPLOADED
+  QUARANTINED
+  VALIDATING
+  SCANNING
+  PENDING_REVIEW
+  APPROVED
+  PUBLISHED
+  REJECTED
+  FLAGGED
+}
+
+enum ScanStatus {
+  PENDING
+  CLEAN
+  INFECTED
+  ERROR
+}
+
+enum AssetKind {
+  ICON
+  SCREENSHOT
+  FEATURE_GRAPHIC
+}
+
+enum ReviewStatus {
+  VISIBLE
+  HIDDEN
+  REMOVED
+}
+
+enum ReportStatus {
+  OPEN
+  REVIEWED
+  DISMISSED
+  ACTIONED
+}
+
+enum ReportReason {
+  MALWARE
+  ILLEGAL_CONTENT
+  COPYRIGHT
+  SPAM
+  MISLEADING
+  OTHER
+}
+
+model User {
+  id              String     @id @default(uuid()) @db.Uuid
+  email           String     @unique
+  passwordHash    String     @map("password_hash")
+  displayName     String     @map("display_name")
+  role            Role       @default(USER)
+  status          UserStatus @default(ACTIVE)
+  emailVerifiedAt DateTime?  @map("email_verified_at")
+  mfaSecret       String?    @map("mfa_secret")
+  mfaEnabled      Boolean    @default(false) @map("mfa_enabled")
+  lastLoginAt     DateTime?  @map("last_login_at")
+  createdAt       DateTime   @default(now()) @map("created_at")
+  updatedAt       DateTime   @updatedAt @map("updated_at")
+
+  developer      DeveloperProfile?
+  sessions       Session[]
+  emailTokens    EmailVerificationToken[]
+  passwordTokens PasswordResetToken[]
+  reviews        Review[]
+  reports        Report[]
+  auditLogs      AuditLog[]
+  downloadEvents DownloadEvent[]
+
+  @@index([role])
+  @@index([status])
+  @@index([createdAt])
+  @@map("users")
+}
+
+model DeveloperProfile {
+  id           String   @id @default(uuid()) @db.Uuid
+  userId       String   @unique @map("user_id") @db.Uuid
+  displayName  String   @map("display_name")
+  slug         String   @unique
+  website      String?
+  supportEmail String   @map("support_email")
+  description  String?
+  isVerified   Boolean  @default(false) @map("is_verified")
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  user User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  apps App[]
+
+  @@index([createdAt])
+  @@map("developer_profiles")
+}
+
+model Session {
+  id         String    @id @default(uuid()) @db.Uuid
+  userId     String    @map("user_id") @db.Uuid
+  tokenHash  String    @unique @map("token_hash")
+  csrfToken  String    @map("csrf_token")
+  mfaPending Boolean   @default(false) @map("mfa_pending")
+  ipAddress  String?   @map("ip_address")
+  userAgent  String?   @map("user_agent")
+  expiresAt  DateTime  @map("expires_at")
+  revokedAt  DateTime? @map("revoked_at")
+  createdAt  DateTime  @default(now()) @map("created_at")
+  lastUsedAt DateTime  @default(now()) @map("last_used_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([expiresAt])
+  @@map("sessions")
+}
+
+model EmailVerificationToken {
+  id        String    @id @default(uuid()) @db.Uuid
+  userId    String    @map("user_id") @db.Uuid
+  tokenHash String    @unique @map("token_hash")
+  expiresAt DateTime  @map("expires_at")
+  usedAt    DateTime? @map("used_at")
+  createdAt DateTime  @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("email_verification_tokens")
+}
+
+model PasswordResetToken {
+  id        String    @id @default(uuid()) @db.Uuid
+  userId    String    @map("user_id") @db.Uuid
+  tokenHash String    @unique @map("token_hash")
+  expiresAt DateTime  @map("expires_at")
+  usedAt    DateTime? @map("used_at")
+  createdAt DateTime  @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("password_reset_tokens")
+}
+
+model Category {
+  id          String   @id @default(uuid()) @db.Uuid
+  slug        String   @unique
+  name        String
+  description String?
+  icon        String?
+  sortOrder   Int      @default(0) @map("sort_order")
+  isActive    Boolean  @default(true) @map("is_active")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  apps App[]
+
+  @@index([isActive, sortOrder])
+  @@map("categories")
+}
+
+model App {
+  id               String    @id @default(uuid()) @db.Uuid
+  developerId      String    @map("developer_id") @db.Uuid
+  categoryId       String    @map("category_id") @db.Uuid
+  slug             String    @unique
+  packageName      String    @unique @map("package_name")
+  name             String
+  shortDescription String    @map("short_description")
+  fullDescription  String    @map("full_description")
+  iconUrl          String?   @map("icon_url")
+  status           AppStatus @default(DRAFT)
+  isFeatured       Boolean   @default(false) @map("is_featured")
+  featuredRank     Int?      @map("featured_rank")
+  publishedAt      DateTime? @map("published_at")
+  suspendedReason  String?   @map("suspended_reason")
+  createdAt        DateTime  @default(now()) @map("created_at")
+  updatedAt        DateTime  @updatedAt @map("updated_at")
+
+  developer      DeveloperProfile @relation(fields: [developerId], references: [id], onDelete: Cascade)
+  category       Category         @relation(fields: [categoryId], references: [id])
+  versions       AppVersion[]
+  assets         AppAsset[]
+  reviews        Review[]
+  reports        Report[]
+  downloadEvents DownloadEvent[]
+  collectionApps CollectionApp[]
+
+  @@index([status, publishedAt])
+  @@index([categoryId, status])
+  @@index([developerId])
+  @@index([isFeatured])
+  @@map("apps")
+}
+
+model AppVersion {
+  id                String        @id @default(uuid()) @db.Uuid
+  appId             String        @map("app_id") @db.Uuid
+  versionName       String        @map("version_name")
+  versionCode       Int           @map("version_code")
+  minSdk            Int?          @map("min_sdk")
+  targetSdk         Int?          @map("target_sdk")
+  releaseNotes      String?       @map("release_notes")
+  status            VersionStatus @default(DRAFT)
+  fileSize          BigInt?       @map("file_size")
+  sha256            String?
+  signingCertSha256 String?       @map("signing_cert_sha256")
+  rejectionReason   String?       @map("rejection_reason")
+  submittedAt       DateTime?     @map("submitted_at")
+  reviewedAt        DateTime?     @map("reviewed_at")
+  publishedAt       DateTime?     @map("published_at")
+  createdAt         DateTime      @default(now()) @map("created_at")
+  updatedAt         DateTime      @updatedAt @map("updated_at")
+
+  app              App                 @relation(fields: [appId], references: [id], onDelete: Cascade)
+  file             AppFile?
+  submissionEvents SubmissionHistory[]
+  downloadEvents   DownloadEvent[]
+
+  @@unique([appId, versionCode])
+  @@index([appId, status])
+  @@index([status])
+  @@map("app_versions")
+}
+
+model AppFile {
+  id            String     @id @default(uuid()) @db.Uuid
+  versionId     String     @unique @map("version_id") @db.Uuid
+  storageKey    String     @map("storage_key")
+  quarantineKey String?    @map("quarantine_key")
+  contentType   String     @default("application/vnd.android.package-archive") @map("content_type")
+  size          BigInt
+  sha256        String
+  scanStatus    ScanStatus @default(PENDING) @map("scan_status")
+  scanReport    Json?      @map("scan_report")
+  scannedAt     DateTime?  @map("scanned_at")
+  createdAt     DateTime   @default(now()) @map("created_at")
+
+  version AppVersion @relation(fields: [versionId], references: [id], onDelete: Cascade)
+
+  @@index([scanStatus])
+  @@map("app_files")
+}
+
+model AppAsset {
+  id         String    @id @default(uuid()) @db.Uuid
+  appId      String    @map("app_id") @db.Uuid
+  kind       AssetKind
+  storageKey String    @map("storage_key")
+  url        String
+  mimeType   String    @map("mime_type")
+  size       BigInt
+  width      Int?
+  height     Int?
+  sortOrder  Int       @default(0) @map("sort_order")
+  createdAt  DateTime  @default(now()) @map("created_at")
+
+  app App @relation(fields: [appId], references: [id], onDelete: Cascade)
+
+  @@index([appId, kind, sortOrder])
+  @@map("app_assets")
+}
+
+model Review {
+  id        String       @id @default(uuid()) @db.Uuid
+  appId     String       @map("app_id") @db.Uuid
+  userId    String       @map("user_id") @db.Uuid
+  rating    Int
+  title     String?
+  body      String
+  status    ReviewStatus @default(VISIBLE)
+  createdAt DateTime     @default(now()) @map("created_at")
+  updatedAt DateTime     @updatedAt @map("updated_at")
+
+  app  App  @relation(fields: [appId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([appId, userId])
+  @@index([appId, status])
+  @@map("reviews")
+}
+
+model Collection {
+  id          String   @id @default(uuid()) @db.Uuid
+  slug        String   @unique
+  title       String
+  description String?
+  isActive    Boolean  @default(true) @map("is_active")
+  sortOrder   Int      @default(0) @map("sort_order")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  apps CollectionApp[]
+
+  @@index([isActive, sortOrder])
+  @@map("collections")
+}
+
+model CollectionApp {
+  collectionId String @map("collection_id") @db.Uuid
+  appId        String @map("app_id") @db.Uuid
+  sortOrder    Int    @default(0) @map("sort_order")
+
+  collection Collection @relation(fields: [collectionId], references: [id], onDelete: Cascade)
+  app        App        @relation(fields: [appId], references: [id], onDelete: Cascade)
+
+  @@id([collectionId, appId])
+  @@index([appId])
+  @@map("collection_apps")
+}
+
+model DownloadEvent {
+  id        String   @id @default(uuid()) @db.Uuid
+  appId     String   @map("app_id") @db.Uuid
+  versionId String   @map("version_id") @db.Uuid
+  userId    String?  @map("user_id") @db.Uuid
+  ipHash    String?  @map("ip_hash")
+  userAgent String?  @map("user_agent")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  app     App        @relation(fields: [appId], references: [id], onDelete: Cascade)
+  version AppVersion @relation(fields: [versionId], references: [id], onDelete: Cascade)
+  user    User?      @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([appId, createdAt])
+  @@index([versionId, createdAt])
+  @@map("download_events")
+}
+
+model Report {
+  id             String       @id @default(uuid()) @db.Uuid
+  appId          String       @map("app_id") @db.Uuid
+  reporterUserId String?      @map("reporter_user_id") @db.Uuid
+  reason         ReportReason
+  details        String?
+  status         ReportStatus @default(OPEN)
+  resolvedById   String?      @map("resolved_by_id") @db.Uuid
+  resolutionNote String?      @map("resolution_note")
+  createdAt      DateTime     @default(now()) @map("created_at")
+  resolvedAt     DateTime?    @map("resolved_at")
+
+  app      App   @relation(fields: [appId], references: [id], onDelete: Cascade)
+  reporter User? @relation(fields: [reporterUserId], references: [id], onDelete: SetNull)
+
+  @@index([status, createdAt])
+  @@index([appId])
+  @@map("reports")
+}
+
+model SubmissionHistory {
+  id          String        @id @default(uuid()) @db.Uuid
+  versionId   String        @map("version_id") @db.Uuid
+  fromStatus  VersionStatus @map("from_status")
+  toStatus    VersionStatus @map("to_status")
+  actorUserId String?       @map("actor_user_id") @db.Uuid
+  note        String?
+  createdAt   DateTime      @default(now()) @map("created_at")
+
+  version AppVersion @relation(fields: [versionId], references: [id], onDelete: Cascade)
+
+  @@index([versionId, createdAt])
+  @@map("submission_history")
+}
+
+model AuditLog {
+  id          String   @id @default(uuid()) @db.Uuid
+  actorUserId String?  @map("actor_user_id") @db.Uuid
+  action      String
+  entityType  String   @map("entity_type")
+  entityId    String?  @map("entity_id")
+  metadata    Json?
+  ipAddress   String?  @map("ip_address")
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  actor User? @relation(fields: [actorUserId], references: [id], onDelete: SetNull)
+
+  @@index([actorUserId, createdAt])
+  @@index([entityType, entityId])
+  @@index([createdAt])
+  @@map("audit_logs")
+}
+
+model Setting {
+  key       String   @id
+  value     Json
+  updatedAt DateTime @updatedAt @map("updated_at")
+  updatedBy String?  @map("updated_by") @db.Uuid
+
+  @@map("settings")
+}
